@@ -1,0 +1,29 @@
+#!/bin/sh
+set -e
+
+PORT="${PORT:-3000}"
+UUID="${UUID:?UUID env is required}"
+WS_PATH="${WS_PATH:-/ws}"
+
+cat > /home/app/config.json <<EOF
+{
+  "log": { "loglevel": "warning" },
+  "inbounds": [{
+    "listen": "0.0.0.0",
+    "port": ${PORT},
+    "protocol": "vless",
+    "settings": {
+      "decryption": "none",
+      "clients": [{ "id": "${UUID}" }]
+    },
+    "streamSettings": {
+      "network": "ws",
+      "security": "none",
+      "wsSettings": { "path": "${WS_PATH}" }
+    }
+  }],
+  "outbounds": [{ "protocol": "freedom" }]
+}
+EOF
+
+exec /xray/xray -config /home/app/config.json

@@ -1,0 +1,22 @@
+FROM alpine:3.20
+
+ARG XRAY_VERSION=1.8.23
+
+RUN apk add --no-cache curl ca-certificates bash tzdata tini unzip \
+ && adduser -D -s /bin/sh app \
+ && mkdir -p /xray /home/app \
+ && chown -R app:app /xray /home/app \
+ && curl -L -o /tmp/xray.zip https://github.com/XTLS/Xray-core/releases/download/v${XRAY_VERSION}/Xray-linux-64.zip \
+ && unzip /tmp/xray.zip -d /xray && rm /tmp/xray.zip \
+ && chmod +x /xray/xray
+
+USER app
+WORKDIR /home/app
+
+ENV PORT=3000
+ENV UUID=00000000-0000-0000-0000-000000000000
+ENV WS_PATH=/ws
+
+EXPOSE 3000
+ENTRYPOINT ["/sbin/tini","--"]
+CMD ["/bin/sh","-c","/xray/xray -config /home/app/config.json"]
